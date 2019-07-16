@@ -49,15 +49,17 @@ let dumpSecurity (fi: FileInfo) =
   printfn "- Relocatable (PIE): %b" fi.IsRelocatable
   printfn ""
 
-let dumpSections (fi: FileInfo) addrToString =
+let dumpSections (hdl: BinHandler) (fi: FileInfo) addrToString =
   printfn "## Section Information"
   fi.GetSections ()
   |> Seq.iteri (fun idx s ->
        printfn "%2d. %s:%s [%s]"
-        idx
-        (addrToString s.Address)
-        (addrToString (s.Address + s.Size))
-        s.Name)
+         idx
+         (addrToString s.Address)
+         (addrToString (s.Address + s.Size))
+         s.Name
+       hdl.ReadBytes(s.Address, int32 s.Size) |> ignore
+       printfn "done")
   printfn ""
 
 let targetString s =
@@ -113,7 +115,7 @@ let dumpFile (opts: FileViewerOpts) (filepath: string) =
   printfn ""
   dumpBasic fi
   dumpSecurity fi
-  dumpSections fi addrToString
+  dumpSections hdl fi addrToString
   dumpSymbols fi addrToString opts.Verbose
   dumpLinkageTable fi addrToString
   dumpFunctions fi addrToString
